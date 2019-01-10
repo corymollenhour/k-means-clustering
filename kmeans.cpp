@@ -13,17 +13,19 @@ Due: 12/4/2018 11:00 PM
 #include <vector>
 #include <cmath>
 
+#define MAX_ITERATIONS 10
+
 using namespace std;
 
 
-//Each Node can have n data points corresponding to features
-//As well as a recorded distance from m clusters
+//Nodes store position data of dataPoints for any number of dimensions
 struct Node {
 	vector<double> dataPoints;
 	int classLabel;
 	bool isCenter = false;
 };
 
+//Centroids store data point positions as well as a collection of Nodes in the cluster and the count of each class
 struct Centroid {
 	vector<double> cPoint;
 	vector<Node *> clusterNodes;
@@ -72,7 +74,8 @@ int main(int argc, char* argv[])
 		cout << "Needs 5 arguments" << endl;
 		return 0;
 	}
-		
+	
+	
 	srand(seed);
 	//Read in file and create a vector of nodes
 	//Record the features as dataPoints
@@ -142,10 +145,12 @@ int main(int argc, char* argv[])
 	//Create n number of centroids, where n = features
 	for (int i = 0; i < clusters; i++) {
 		Centroid * cent = new Centroid();
+		srand(seed);
 		int random = rand() % trainingLength;
 		while (trainingData[random]->isCenter) { //Don't reuse a datapoint for centroid location
 			random = rand() % trainingLength;
 		}
+
 		for (int j = 0; j < features; j++)
 			cent->cPoint.push_back(trainingData[random]->dataPoints[j]);
 		
@@ -160,6 +165,8 @@ int main(int argc, char* argv[])
 			centroidList[i]->classCounts.push_back(0);
 
 	bool hasChange = true;
+	
+	int iterations = 0;
 	while (hasChange) {
 		hasChange = false;
 		//determine the distance of all data points to all centroids
@@ -181,7 +188,7 @@ int main(int argc, char* argv[])
 
 		//Find shortest Distance
 		for (int j = 0; j < trainingLength; j++) {
-			double shortest = 10000;
+			double shortest = 10000000.0;
 			int centroidNum = 0;
 			
 			for (int k = 0; k < clusters; k++) {
@@ -231,9 +238,10 @@ int main(int argc, char* argv[])
 			centroidList.push_back(newCentroidList->at(i));
 		}
 		newCentroidList->clear();
-		if (hasChange == false) {
+		if (hasChange == false || iterations == MAX_ITERATIONS)
 			break;
-		}
+		iterations++;
+			
 	}
 
 	int predictionsCorrect = predictClasses(centroidList, testingData);
@@ -243,6 +251,7 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+//Finds the nodes that are nearest to the centroid specified
 int getNearest(vector<Centroid*> centroidList, Node * node) {
 	double lowest = 1000000.0;
 	double distance;
@@ -285,14 +294,12 @@ double euclideanDistance(Node * data, Centroid * cent) {
 int  getMajorityClass(Centroid * cent) {
 	int max = 0;
 	int highestCount = 0;
-	if (cent->clusterNodes.size() > 0) {
-		for (int i = 0; i<highestClass + 1; i++)
+	if(cent->clusterNodes.size() > 0){
+		for(int i=0; i<highestClass+1; i++)
 			if (cent->classCounts[i] > max) {
 				max = cent->classCounts[i];
 				highestCount = i;
 			}
 		return highestCount;
 	}
-	return 0;
-	
 }
