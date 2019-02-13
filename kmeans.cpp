@@ -1,8 +1,5 @@
 /*
 Cory Mollenhour
-CSCI 4350 - Joshua Phillips
-Open Lab 4
-Due: 12/4/2018 11:00 PM
 */
 
 
